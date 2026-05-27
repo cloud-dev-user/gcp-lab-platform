@@ -20,7 +20,7 @@ students = {
   student01 = {
     display_name    = "Lab User 01"
     username        = "lab-user-01"
-    email           = "gcp.training.lab01@gmail.com"  # replace with real account
+    email           = "scmtrainer786@gmail.com"  # replace with real account
     lab_expiry_days = 10
     roles = [
       "roles/viewer",
