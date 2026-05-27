@@ -1,0 +1,20 @@
+# Terraform state — never commit
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+
+# Sensitive variable files
+*.auto.tfvars
+terraform.tfvars
+
+# Service account key files
+creds/
+*.json
+
+# Generated access cards — contain passwords
+access-cards/
+
+# OS
+.DS_Store
+Thumbs.db

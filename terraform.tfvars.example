@@ -1,0 +1,95 @@
+# ============================================================================
+# GCP LAB PLATFORM — Example Configuration
+# ============================================================================
+# Copy to terraform.auto.tfvars and fill in your values.
+# Never commit terraform.auto.tfvars to version control (passwords, keys).
+
+project_id = "orange-gcp-training"
+region     = "us-central1"
+lab_batch  = "june-2026-batch1"
+
+# ── MODE A: Pre-existing Gmail accounts ─────────────────────────────────────
+# Each student needs an existing Google account.
+# Create a set of shared training Gmail accounts once (e.g. gcp.lab.01@gmail.com)
+# and reuse them across batches.
+#
+use_cloud_identity      = false
+enable_expiry_condition = false  # Set true only if IAM Conditions API is enabled
+
+students = {
+  student01 = {
+    display_name    = "Lab User 01"
+    username        = "lab-user-01"
+    email           = "gcp.training.lab01@gmail.com"  # replace with real account
+    lab_expiry_days = 10
+    roles = [
+      "roles/viewer",
+      "roles/storage.objectViewer",
+      "roles/logging.viewer",
+      "roles/monitoring.viewer",
+    ]
+  }
+
+  student02 = {
+    display_name    = "Lab User 02"
+    username        = "lab-user-02"
+    email           = "gcp.training.lab02@gmail.com"
+    lab_expiry_days = 10
+    roles = [
+      "roles/viewer",
+      "roles/storage.objectViewer",
+      "roles/logging.viewer",
+      "roles/monitoring.viewer",
+    ]
+  }
+
+  student03 = {
+    display_name    = "Lab User 03"
+    username        = "lab-user-03"
+    email           = "gcp.training.lab03@gmail.com"
+    lab_expiry_days = 10
+    roles = [
+      "roles/viewer",
+      "roles/storage.objectViewer",
+      "roles/logging.viewer",
+      "roles/monitoring.viewer",
+    ]
+  }
+}
+
+# ── MODE B: Cloud Identity managed accounts ──────────────────────────────────
+# Creates lab1@yourdomain.com, lab2@yourdomain.com etc. with generated passwords.
+# Prerequisites:
+#   1. Own a domain configured with Google Cloud Identity Free or Google Workspace.
+#   2. Create a service account with domain-wide delegation in Google Workspace Admin.
+#   3. Grant it the "User Management" Admin API scope.
+#
+# Uncomment the block below and comment out MODE A above.
+#
+# use_cloud_identity            = true
+# identity_domain               = "training.yourcompany.com"
+# workspace_customer_id         = "C0xxxxxxx"          # Admin Console → Account
+# workspace_admin_email         = "admin@yourcompany.com"
+# workspace_sa_credentials_file = "./creds/workspace-sa.json"
+# enable_expiry_condition       = true
+#
+# students = {
+#   lab01 = {
+#     display_name    = "Lab User 01"
+#     username        = "lab01"           # becomes lab01@training.yourcompany.com
+#     lab_expiry_days = 10
+#     roles = [
+#       "roles/viewer",
+#       "roles/storage.objectViewer",
+#     ]
+#   }
+#   lab02 = {
+#     display_name    = "Lab User 02"
+#     username        = "lab02"
+#     lab_expiry_days = 10
+#     roles = [
+#       "roles/viewer",
+#       "roles/storage.objectViewer",
+#     ]
+#   }
+# }

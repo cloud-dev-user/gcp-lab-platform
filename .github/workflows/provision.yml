@@ -1,0 +1,75 @@
+name: Provision Lab Students
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Terraform action to run"
+        required: true
+        default: plan
+        type: choice
+        options: [plan, apply]
+      lab_batch:
+        description: "Lab batch name (e.g. june-2026-batch1)"
+        required: true
+      tfvars_file:
+        description: "Path to tfvars file (relative to repo root)"
+        required: false
+        default: "terraform.auto.tfvars"
+
+env:
+  TF_VERSION: "1.6.6"
+  TF_IN_AUTOMATION: "true"
+
+jobs:
+  provision:
+    name: "Terraform ${{ github.event.inputs.action }}"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # Required for Workload Identity Federation
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP (Workload Identity Federation)
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.TF_SERVICE_ACCOUNT }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ vars.STATE_BUCKET }}" \
+            -backend-config="prefix=lab-platform/${{ github.event.inputs.lab_batch }}"
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: |
+          terraform plan \
+            -var-file="${{ github.event.inputs.tfvars_file }}" \
+            -var="project_id=${{ vars.GCP_PROJECT_ID }}" \
+            -var="lab_batch=${{ github.event.inputs.lab_batch }}" \
+            -out=tfplan
+
+      - name: Terraform Apply
+        if: github.event.inputs.action == 'apply'
+        run: terraform apply -auto-approve tfplan
+
+      - name: Upload Access Cards
+        if: github.event.inputs.action == 'apply'
+        uses: actions/upload-artifact@v4
+        with:
+          name: "access-cards-${{ github.event.inputs.lab_batch }}"
+          path: access-cards/
+          retention-days: 1   # Delete after 1 day — contains passwords

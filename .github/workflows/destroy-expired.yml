@@ -1,0 +1,62 @@
+name: Destroy Expired Lab Students
+
+on:
+  # Run daily at 02:00 UTC to clean up expired batches
+  schedule:
+    - cron: "0 2 * * *"
+
+  # Manual trigger for immediate destroy
+  workflow_dispatch:
+    inputs:
+      lab_batch:
+        description: "Lab batch name to destroy (e.g. june-2026-batch1)"
+        required: true
+      confirm:
+        description: "Type DESTROY to confirm removal of all student access"
+        required: true
+
+env:
+  TF_VERSION: "1.6.6"
+  TF_IN_AUTOMATION: "true"
+
+jobs:
+  destroy:
+    name: "Terraform Destroy — ${{ github.event.inputs.lab_batch || vars.ACTIVE_LAB_BATCH }}"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    # Guard: require explicit confirmation for manual triggers
+    if: >
+      github.event_name == 'schedule' ||
+      github.event.inputs.confirm == 'DESTROY'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.TF_SERVICE_ACCOUNT }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        run: |
+          BATCH="${{ github.event.inputs.lab_batch || vars.ACTIVE_LAB_BATCH }}"
+          terraform init \
+            -backend-config="bucket=${{ vars.STATE_BUCKET }}" \
+            -backend-config="prefix=lab-platform/${BATCH}"
+
+      - name: Terraform Destroy
+        run: |
+          terraform destroy \
+            -var="project_id=${{ vars.GCP_PROJECT_ID }}" \
+            -var="lab_batch=${{ github.event.inputs.lab_batch || vars.ACTIVE_LAB_BATCH }}" \
+            -auto-approve
