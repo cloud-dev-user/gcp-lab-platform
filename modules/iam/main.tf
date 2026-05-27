@@ -24,7 +24,7 @@ locals {
   }
 
   expiry_condition = {
-    title       = "lab-expiry-${formatdate("YYYYMMdd", var.expiry_date)}"
+    title       = "lab-expiry-${formatdate("YYYYMMDD", var.expiry_date)}"
     description = "Batch: ${var.lab_batch} | Student: ${var.student_name} | Expires: ${formatdate("DD MMM YYYY", var.expiry_date)}"
     expression  = "request.time < timestamp(\"${var.expiry_date}\")"
   }
