@@ -36,8 +36,8 @@ provider "googleworkspace" {
   # When use_cloud_identity = false no workspace resources are created, but the
   # provider still validates customer_id at init. Pass a dummy so Mode A works
   # without needing to supply Workspace credentials.
-  customer_id             = var.workspace_customer_id != "" ? var.workspace_customer_id : "not-used"
-  credentials             = var.workspace_sa_credentials_file
+  customer_id             = coalesce(var.workspace_customer_id, "not-used")
+  credentials             = var.workspace_sa_credentials_file != "" ? var.workspace_sa_credentials_file : null
   impersonated_user_email = var.workspace_admin_email
 
   oauth_scopes = [
