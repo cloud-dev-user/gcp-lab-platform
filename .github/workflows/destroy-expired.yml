@@ -2,8 +2,8 @@ name: Destroy Expired Lab Students
 
 on:
   # Run daily at 02:00 UTC to clean up expired batches
-  schedule:
-    - cron: "0 2 * * *"
+ # schedule:
+  #  - cron: "0 2 * * *"
 
   # Manual trigger for immediate destroy
   workflow_dispatch:
